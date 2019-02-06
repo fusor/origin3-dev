@@ -1,0 +1,10 @@
+- hosts: localhost
+  vars_files:
+  - config.yml
+  roles:
+    - openshift_setup
+    - ansible_service_broker_setup
+  tasks:
+  - import_tasks: tasks/local.yml
+    when: not(ec2_install)
+    

@@ -1,0 +1,99 @@
+---
+  - name: Waiting 1 minutes for service-catalog
+    action: >-
+      shell "{{ openshift_setup_client_oc_cmd }}" get deployments -n kube-service-catalog apiserver
+      -o go-template={% raw %}'{{ .status.availableReplicas }}'{% endraw %}
+    register: apiserver_deployment
+    until: apiserver_deployment.stdout == '1'
+    retries: 6
+    delay: 10
+
+  - name: Looking up Ansible Broker template URL for {{ broker_tag }}
+    set_fact:
+      asb_template_url: "{{ asb_deployment_info[openshift_setup_client_version].template_url }}"
+    when: (asb_template_url is not defined) or (asb_template_url == "")
+
+  - name: Curling ansible-service-broker-all.yaml
+    get_url:
+      url: "{{ asb_template_url }}"
+      force: yes
+      dest: "{{ asb_local_target_template }}"
+
+  - name: check if the {{ asb_project }} project exists
+    shell: "{{ openshift_setup_client_oc_cmd }} get project --no-headers=true | awk '{ print $1 }' | grep -E '^{{ asb_project }}( |$)' | cat"
+    register: project
+
+  - name: get service-catalog-apiserver-token secret name
+    shell: "{{ openshift_setup_client_oc_cmd}} get secret --no-headers=true -n kube-service-catalog | grep -m 1 service-catalog-apiserver-token | awk '{ print $1 }' | cat"
+    register: cat_token_secret_name
+
+  - name: retrieve cert for cluster
+    shell: "{{ openshift_setup_client_oc_cmd}} get secret {{ cat_token_secret_name.stdout }} -n kube-service-catalog -o yaml | grep service-ca.crt | awk '{ print $2 }' | cat"
+    register: cluster_ca_cert
+
+  - debug:
+      msg: "Service Broker must have a CA Bundle set for the Ansible Service Broker and Service Catalog to be able to communicate"
+    when: cluster_ca_cert.stdout == ""
+
+  - name: Create a new project for the {{ asb_project }}
+    shell: "{{ openshift_setup_client_oc_cmd }} new-project {{ asb_project }}"
+    register: new_asb_project
+    when: project.stdout.find( asb_project ) == -1
+
+  - name: Create command line for processing template
+    set_fact:
+      cmd_process_asb_template: >-
+        {{ openshift_setup_client_oc_cmd }}
+        process
+        -f {{ asb_local_target_template }}
+        -n {{ asb_project }}
+        -p BROKER_IMAGE={{ broker_image }}
+        -p REGISTRY_TYPE={{ broker_registry_type }}
+        -p REGISTRY_URL={{ broker_registry_url }}
+        -p DEV_BROKER={{ broker_dev_broker }}
+        -p DOCKERHUB_ORG='{{ asb_dockerhub_org }}'
+        -p DOCKERHUB_PASS='{{ asb_dockerhub_pass }}'
+        -p DOCKERHUB_USER='{{ asb_dockerhub_user }}'
+        -p LAUNCH_APB_ON_BIND={{ asb_broker_launch_apb_on_bind }}
+        -p OUTPUT_REQUEST={{ asb_broker_output_request }}
+        -p RECOVERY={{ asb_broker_recovery }}
+        -p ROUTING_SUFFIX={{ openshift_setup_routing_suffix }}
+        -p REGISTRY_NAME={{ asb_broker_registry_name }}
+        -p ENABLE_BASIC_AUTH={{ asb_broker_enable_basic_auth }}
+        -p REFRESH_INTERVAL={{ asb_broker_bootstrap_refresh_interval }}
+        -p TAG={{ asb_apb_tag }}
+        -p SANDBOX_ROLE={{ asb_broker_sandbox_role }}
+        -p IMAGE_PULL_POLICY={{ asb_broker_pull_policy }}
+        -p BROKER_CA_CERT='{{ cluster_ca_cert.stdout }}'
+        -p AUTO_ESCALATE={{ asb_broker_auto_escalate|bool }}
+        -p KEEP_NAMESPACE={{ asb_broker_keep_namespace|bool }}
+        -p KEEP_NAMESPACE_ON_ERROR={{ asb_broker_keep_namespace_on_error|bool }}
+        {% if broker_kind is defined %}-p BROKER_KIND={{ asb_broker_kind }}{% endif %}
+        {% if broker_auth is defined %}-p BROKER_AUTH='{{ asb_broker_auth }}'{% endif %}
+
+  - name: Include deployment steps for etcd when deploying older broker versions
+    include_tasks: broker_etcd_setup.yml
+    when:
+    - '("v3.9" in openshift_setup_client_version) or ("v3.7" in openshift_setup_client_version)'
+
+  - name: Process template "{{ asb_local_target_template }}"
+    shell: >
+      {{ cmd_process_asb_template }}
+      &> {{ asb_local_target_template_processed }}
+
+  - name: Running oc create on processed template
+    shell: "{{ openshift_setup_client_oc_cmd }} create -f {{ asb_local_target_template_processed }}"
+
+  - name: Switch project to {{ asb_project }}
+    shell: "{{ openshift_setup_client_oc_cmd }} project {{ asb_project }}"
+
+  - name: Set proxied broker vars
+    set_fact:
+      proxied_broker_project: "{{ asb_project }}"
+      proxied_broker_container: asb
+    when: ec2_use_proxy and ec2_install
+
+  - name: Configure ASB with egress proxy
+    include_role:
+      name: broker_proxy_setup
+    when: ec2_use_proxy and ec2_install

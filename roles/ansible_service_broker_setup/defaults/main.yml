@@ -1,0 +1,37 @@
+asb_apb_tag: latest
+asb_auto_escalate: "true"
+asb_bearer_token_file: ""
+asb_bootstrap_on_startup: "true"
+asb_broker_config: /etc/ansible-service-broker/config.yaml
+asb_broker_pass: YWRtaW4=
+asb_broker_url_prefix: "/ansible-service-broker"
+asb_broker_user: YWRtaW4=
+asb_ca_file: ""
+asb_cluster_auth_host: ""
+asb_deployment_info:
+  'v3.7':
+    template_url: https://raw.githubusercontent.com/openshift/ansible-service-broker/release-1.0/templates/deploy-ansible-service-broker.template.yaml
+  'v3.9':
+    template_url: https://raw.githubusercontent.com/openshift/ansible-service-broker/release-1.1/templates/deploy-ansible-service-broker.template.yaml
+asb_dockerhub_org: ansibleplaybookbundle 
+asb_dockerhub_user: changeme
+asb_dockerhub_pass: changeme
+asb_enable_basic_auth: "false"
+asb_etcd_path: /usr/local/bin/etcd
+asb_image_pull_policy: "IfNotPresent"
+asb_keep_namespace: "false"
+asb_keep_namespace_on_error: "true"
+asb_launch_apb_on_bind: "false"
+asb_local_target_template: /tmp/deploy-ansible-service-broker.template.yaml.local
+asb_local_target_template_processed: /tmp/deploy-ansible-service-broker.template.yaml.local.processed
+asb_output_request: "true"
+asb_project: ansible-service-broker
+asb_recovery: "true"
+asb_refresh_interval: "600s"
+asb_registry: "ansibleplaybookbundle"
+asb_registry_name: dh
+asb_registry_type: dockerhub
+asb_registry_url: https://registry.hub.docker.com
+asb_sandbox_role: "edit"
+asb_src_dir: /tmp/ansible-service-broker
+asb_template_dest: /tmp/k8s-ansible-service-broker.yaml

@@ -1,0 +1,193 @@
+---
+  - set_fact:
+      openshift_setup_build_type: "mac"
+      openshift_setup_client_ext: "zip"
+    when: ansible_os_family == "Darwin"
+
+  - set_fact:
+      openshift_setup_build_type: "linux-64bit"
+      openshift_setup_client_ext: "tar.gz"
+    when: (ansible_os_family == "RedHat") or
+          (ansible_distribution == "Ubuntu") or
+          (ansible_distribution == "Archlinux")
+
+  - package:
+      name: "libselinux-python"
+      state: installed
+    become: true
+    when: ansible_os_family == "RedHat"
+
+  - file:
+      path: "{{ openshift_setup_client_tools_dir }}"
+      state: directory
+      mode: 0755
+
+  - name: Get client binary for Mac
+    unarchive:
+      remote_src: true
+      src: "{{ openshift_setup_client_release_url }}"
+      dest: "{{ openshift_setup_client_tools_dir }}"
+      mode: 0755
+      exclude:
+      - README.md
+      - LICENSE
+    when:
+    - openshift_setup_client_ext=="zip"
+    - not(openshift_setup_use_local_oc_client)
+
+  - name: Get client binary for Linux
+    unarchive:
+      remote_src: true
+      src: "{{ openshift_setup_client_release_url }}"
+      dest: "{{ openshift_setup_client_tools_dir }}"
+      mode: 0755
+      extra_opts:
+      - "--strip-components=1"
+      - "--add-file"
+      - "{{ openshift_setup_client_release }}/oc" 
+    when:
+    - openshift_setup_client_ext=="tar.gz"
+    - not(openshift_setup_use_local_oc_client)
+
+  - name: Copy oc to /usr/bin/oc
+    copy:
+      remote_src: True
+      src: "{{ openshift_setup_client_openshift_setup_client_oc_cmd }}"
+      dest: "/usr/bin/oc"
+      mode: 0755
+    when: ec2_install
+    become: true
+
+  - name: Install docker through pip
+    pip:
+      name: docker
+      version: 2.3.0
+    become: 'true'
+    when: ansible_os_family != "RedHat"
+
+  - set_fact:
+      python_docker: python2-docker
+
+  - set_fact:
+      python_docker: python3-docker
+    when: 
+    - ansible_distribution == 'Fedora'
+    - ansible_distribution_major_version == "29"
+
+  - name: Install docker through yum/dnf
+    package:
+      name: "{{ python_docker }}"
+      state: installed
+    become: 'true'
+    when: ansible_os_family == "RedHat"
+
+  - name: Pull docker images for all openshift versions
+    docker_image:
+      name: "{{ item.img }}"
+      state: present
+      force: yes
+      tag: "{{ item.tag }}"
+    with_items:
+      - "{{ openshift_setup_docker_images.group1 }}"
+
+  - name: Pull additional docker images for 3.9+
+    docker_image:
+      name: "{{ item.img }}"
+      state: present
+      force: yes
+      tag: "{{ item.tag }}"
+    with_items:
+      - "{{ openshift_setup_docker_images.group2 }}"
+    when: (openshift_setup_image_tag == "latest") or
+          ("v3.9" in openshift_setup_image_tag) or
+          ("v3.10" in openshift_setup_image_tag) or
+          ("v3.11" in openshift_setup_image_tag)
+
+  - name: Pull additional docker images for 3.10+
+    docker_image:
+      name: "{{ item.img }}"
+      state: present
+      force: yes
+      tag: "{{ item.tag }}"
+    with_items:
+      - "{{ openshift_setup_docker_images.group3 }}"
+    when: (openshift_setup_image_tag == "latest") or
+          ("v3.10" in openshift_setup_image_tag) or
+          ("v3.11" in openshift_setup_image_tag)
+
+  - name: Pull additional docker images for 3.11+
+    docker_image:
+      name: "{{ item.img }}"
+      state: present
+      force: yes
+      tag: "{{ item.tag }}"
+    with_items:
+      - "{{ openshift_setup_docker_images.group4 }}"
+    when:
+    - not("v3.7" in openshift_setup_image_tag)
+    - not("v3.9" in openshift_setup_image_tag)
+    - not("v3.10" in openshift_setup_image_tag)
+
+  - name: Pull images for all versions except v3.11+
+    docker_image:
+      name: "{{ item.img }}"
+      state: present
+      force: yes
+      tag: "{{ item.tag }}"
+    with_items:
+      - "{{ openshift_setup_docker_images.group5 }}"
+    when: ("v3.7" in openshift_setup_image_tag) or
+          ("v3.9" in openshift_setup_image_tag) or
+          ("v3.10" in openshift_setup_image_tag)
+
+  - name: Create command line for oc cluster up execution for older oc clients up to 3.9
+    set_fact:
+      oc_cluster_up_cmd: >-
+        {{ openshift_setup_client_oc_cmd }} cluster up
+        --routing-suffix={{ openshift_setup_routing_suffix }}
+        --public-hostname={{ openshift_setup_hostname }}
+        --host-pv-dir={{ openshift_setup_vol_mnt_point }}
+        --image={{ openshift_setup_origin_image_name }}
+        --version={{ openshift_setup_image_tag }}
+        --service-catalog=true
+    when: ("v3.7" in openshift_setup_image_tag) or
+          ("v3.9" in openshift_setup_image_tag)
+
+  - name: Create command line for oc cluster up execution for newer oc 3.10+ clients
+    set_fact:
+      oc_cluster_up_cmd: >-
+        {{ openshift_setup_client_oc_cmd }} cluster up
+        --routing-suffix={{ openshift_setup_routing_suffix }}
+        --public-hostname={{ openshift_setup_hostname }}
+        --base-dir={{ openshift_setup_base_dir }}
+        --tag={{ openshift_setup_image_tag }}
+        --image={{ openshift_setup_origin_image_name }}-\${component}:\${version}
+        --enable=service-catalog,router,registry,web-console,persistent-volumes,sample-templates,rhel-imagestreams,automation-service-broker,template-service-broker
+    when: ("v3.10" in openshift_setup_image_tag) or
+          ("v3.11" in openshift_setup_image_tag)
+
+  - name: stop old cluster
+    shell: "{{ openshift_setup_client_oc_cmd }} cluster down"
+
+  - name: clean up old cluster
+    shell: for i in $(mount | grep openshift | awk '{ print $3}'); do umount "$i"; done && rm -rf /tmp/openshift.local.clusterup
+    become: true
+
+  - debug:
+      msg: "Looking at oc cluster up command:  '{{ oc_cluster_up_cmd }}'"
+
+  - name: Run oc cluster up to start the cluster
+    shell: "{{ openshift_setup_client_oc_cmd }} cluster down && {{ oc_cluster_up_cmd }}"
+    register: oc_cluster_up
+
+  - name: Login as system:admin
+    shell: "{{ openshift_setup_client_oc_cmd }} login -u system:admin"
+
+  - name: Create user {{ openshift_setup_user }}
+    shell: "{{ openshift_setup_client_oc_cmd }} create user {{ openshift_setup_user }}"
+
+  - name: Add cluster-admin role to {{ openshift_setup_user }}
+    shell: "{{ openshift_setup_client_oc_cmd }} adm policy add-cluster-role-to-user cluster-admin {{ openshift_setup_user }}"
+
+  - name: Login as {{ openshift_setup_user }}
+    shell: "{{ openshift_setup_client_oc_cmd }} login -u {{ openshift_setup_user }} -p {{ openshift_setup_user_password }} --insecure-skip-tls-verify=true"

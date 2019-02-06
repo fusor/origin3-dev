@@ -1,0 +1,4 @@
+---
+  - include_tasks: broker.yml
+    when: ("v3.9" in openshift_setup_image_tag) or
+          ("v3.7" in openshift_setup_image_tag)

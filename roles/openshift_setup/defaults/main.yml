@@ -1,0 +1,62 @@
+openshift_setup_base_dir: /tmp/openshift.local.clusterup
+openshift_setup_broker_image_name: docker.io/ansibleplaybookbundle/origin-ansible-service-broker
+openshift_setup_client: "{{ openshift_setup_clients[openshift_setup_client_version] }}"
+openshift_setup_client_oadm_cmd: "{{ openshift_setup_cmd }} adm"
+openshift_setup_client_oc_cmd: "{{ openshift_setup_client_tools_dir }}/oc"
+openshift_setup_client_release: "{{ openshift_setup_client.release_ver}}-{{ openshift_setup_build_type }}"
+openshift_setup_client_release_file: "{{ openshift_setup_client_release }}.{{ openshift_setup_client_ext }}"
+openshift_setup_client_release_url: "{{openshift_setup_client.url}}/{{ openshift_setup_client_release_file }}"
+openshift_setup_client_tools_dir: "{{ ansible_env.HOME }}/bin"
+openshift_setup_client_version: v3.11
+openshift_setup_clients:
+  v3.6:
+    url: https://github.com/openshift/origin/releases/download/v3.6.0
+    release_ver: openshift-origin-client-tools-v3.6.0-c4dd4cf
+  v3.7:
+    url: https://github.com/openshift/origin/releases/download/v3.7.0
+    release_ver: openshift-origin-client-tools-v3.7.0-7ed6862
+  v3.9:
+    url: https://github.com/openshift/origin/releases/download/v3.9.0
+    release_ver: openshift-origin-client-tools-v3.9.0-191fece
+  v3.10:
+    url: https://github.com/openshift/origin/releases/download/v3.10.0
+    release_ver: openshift-origin-client-tools-v3.10.0-dd10d17
+  v3.11:
+    url: https://github.com/openshift/origin/releases/download/v3.11.0
+    release_ver: openshift-origin-client-tools-v3.11.0-0cbc58b
+openshift_setup_docker_images:
+  group1:
+  - { img: "{{ openshift_setup_broker_image_name }}", tag: "{{ openshift_setup_image_tag }}" }
+  - { img: "{{ openshift_setup_origin_image_name }}-service-catalog", tag: "{{ openshift_setup_image_tag }}" }
+  - { img: "{{ openshift_setup_etcd_image_name }}", tag: "{{ openshift_setup_etcd_tag }}" }
+  - { img: "{{ openshift_setup_origin_image_name }}", tag: "{{ openshift_setup_image_tag }}" }
+  - { img: "{{ openshift_setup_origin_image_name }}-deployer", tag: "{{ openshift_setup_image_tag }}" }
+  - { img: "{{ openshift_setup_origin_image_name }}-docker-registry", tag: "{{ openshift_setup_image_tag }}" }
+  - { img: "{{ openshift_setup_origin_image_name }}-haproxy-router", tag: "{{ openshift_setup_image_tag }}" }
+  - { img: "{{ openshift_setup_origin_image_name }}-pod", tag: "{{ openshift_setup_image_tag }}" }
+  - { img: "{{ openshift_setup_origin_image_name }}-recycler", tag: "{{ openshift_setup_image_tag }}" }
+  group2:
+  - { img: "{{ openshift_setup_origin_image_name }}-template-service-broker", tag: "{{ openshift_setup_image_tag }}" }
+  - { img: "{{ openshift_setup_origin_image_name }}-web-console", tag: "{{ openshift_setup_image_tag }}" }
+  group3:
+  - { img: "{{ openshift_setup_origin_image_name }}-control-plane", tag: "{{ openshift_setup_image_tag }}" }
+  - { img: "{{ openshift_setup_origin_image_name }}-hyperkube", tag: "{{ openshift_setup_image_tag }}" }
+  - { img: "{{ openshift_setup_origin_image_name }}-hypershift", tag: "{{ openshift_setup_image_tag }}" }
+  - { img: "{{ openshift_setup_origin_image_name }}-node", tag: "{{ openshift_setup_image_tag }}" }
+  group4:
+  - { img: "{{ openshift_setup_origin_image_name }}-cli", tag: "{{ openshift_setup_image_tag }}" }
+  - { img: "docker.io/openshift/origin-service-serving-cert-signer", tag: "v3.11" }
+  group5:
+  - { img: "{{ openshift_setup_origin_image_name }}-sti-builder", tag: "{{ openshift_setup_image_tag }}" }
+openshift_setup_etcd_image_name: quay.io/coreos/etcd
+openshift_setup_etcd_tag: latest
+openshift_setup_origin_image_name: docker.io/openshift/origin
+openshift_setup_ip: "{{ hostvars[inventory_hostname]['ansible_' + openshift_setup_interface]['ipv4']['address'] }}"
+openshift_setup_hostname: "{{ openshift_setup_ip }}.nip.io"
+openshift_setup_image_tag: "{{ openshift_setup_client_version }}"
+openshift_setup_interface: docker0
+openshift_setup_routing_suffix: "{{ openshift_setup_hostname }}"
+openshift_setup_use_local_oc_client: false
+openshift_setup_vol_mnt_point: "{{ openshift_setup_base_dir }}/openshift.local.pv"
+openshift_setup_user: admin
+openshift_setup_user_password: admin
