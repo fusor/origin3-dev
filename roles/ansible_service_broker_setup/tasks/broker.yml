@@ -47,29 +47,29 @@
         process
         -f {{ asb_local_target_template }}
         -n {{ asb_project }}
-        -p BROKER_IMAGE={{ broker_image }}
-        -p REGISTRY_TYPE={{ broker_registry_type }}
-        -p REGISTRY_URL={{ broker_registry_url }}
-        -p DEV_BROKER={{ broker_dev_broker }}
+        -p BROKER_IMAGE={{ openshift_setup_broker_image_name }}
+        -p REGISTRY_TYPE={{ asb_registry_type }}
+        -p REGISTRY_URL={{ asb_registry_url }}
+        -p DEV_BROKER={{ asb_dev_broker }}
         -p DOCKERHUB_ORG='{{ asb_dockerhub_org }}'
         -p DOCKERHUB_PASS='{{ asb_dockerhub_pass }}'
         -p DOCKERHUB_USER='{{ asb_dockerhub_user }}'
-        -p LAUNCH_APB_ON_BIND={{ asb_broker_launch_apb_on_bind }}
-        -p OUTPUT_REQUEST={{ asb_broker_output_request }}
-        -p RECOVERY={{ asb_broker_recovery }}
+        -p LAUNCH_APB_ON_BIND={{ asb_launch_apb_on_bind }}
+        -p OUTPUT_REQUEST={{ asb_output_request }}
+        -p RECOVERY={{ asb_recovery }}
         -p ROUTING_SUFFIX={{ openshift_setup_routing_suffix }}
-        -p REGISTRY_NAME={{ asb_broker_registry_name }}
-        -p ENABLE_BASIC_AUTH={{ asb_broker_enable_basic_auth }}
-        -p REFRESH_INTERVAL={{ asb_broker_bootstrap_refresh_interval }}
+        -p REGISTRY_NAME={{ asb_registry_name }}
+        -p ENABLE_BASIC_AUTH={{ asb_enable_basic_auth }}
+        -p REFRESH_INTERVAL={{ asb_refresh_interval }}
         -p TAG={{ asb_apb_tag }}
-        -p SANDBOX_ROLE={{ asb_broker_sandbox_role }}
-        -p IMAGE_PULL_POLICY={{ asb_broker_pull_policy }}
+        -p SANDBOX_ROLE={{ asb_sandbox_role }}
+        -p IMAGE_PULL_POLICY={{ asb_image_pull_policy }}
         -p BROKER_CA_CERT='{{ cluster_ca_cert.stdout }}'
-        -p AUTO_ESCALATE={{ asb_broker_auto_escalate|bool }}
-        -p KEEP_NAMESPACE={{ asb_broker_keep_namespace|bool }}
-        -p KEEP_NAMESPACE_ON_ERROR={{ asb_broker_keep_namespace_on_error|bool }}
-        {% if broker_kind is defined %}-p BROKER_KIND={{ asb_broker_kind }}{% endif %}
-        {% if broker_auth is defined %}-p BROKER_AUTH='{{ asb_broker_auth }}'{% endif %}
+        -p AUTO_ESCALATE={{ asb_auto_escalate|bool }}
+        -p KEEP_NAMESPACE={{ asb_keep_namespace|bool }}
+        -p KEEP_NAMESPACE_ON_ERROR={{ asb_keep_namespace_on_error|bool }}
+        {% if asb_broker_kind is defined %}-p BROKER_KIND={{ asb_broker_kind }}{% endif %}
+        {% if asb_broker_auth is defined %}-p BROKER_AUTH='{{ asb_broker_auth }}'{% endif %}
 
   - name: Include deployment steps for etcd when deploying older broker versions
     include_tasks: broker_etcd_setup.yml
