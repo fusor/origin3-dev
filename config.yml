@@ -1,5 +1,0 @@
-openshift_setup_client_version: v3.11
-openshift_setup_interface: docker0
-
-ec2_install: false
-ec2_use_proxy: false

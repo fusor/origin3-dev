@@ -1,5 +1,0 @@
-- set_fact:
-    msg: |
-        Hostname:                  {{ openshift_setup_hostname }}
-        OpenShift Web Console: https://{{ openshift_setup_hostname }}:8443/console
-        CLI: oc login --insecure-skip-tls-verify {{ openshift_setup_hostname }}:8443 -u {{ openshift_setup_user }} -p {{ openshift_setup_user_password }}

@@ -1,0 +1,13 @@
+- hosts: localhost
+  vars_files:
+  - config.yml
+  roles:
+  - ec2_provision
+
+- hosts: all
+  vars_files:
+  - config.yml
+  roles:
+  - { role: ec2_configure }
+  - openshift_setup
+  - ansible_service_broker_setup

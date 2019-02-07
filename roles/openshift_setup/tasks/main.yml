@@ -49,15 +49,6 @@
     - openshift_setup_client_ext=="tar.gz"
     - not(openshift_setup_use_local_oc_client)
 
-  - name: Copy oc to /usr/bin/oc
-    copy:
-      remote_src: True
-      src: "{{ openshift_setup_client_openshift_setup_client_oc_cmd }}"
-      dest: "/usr/bin/oc"
-      mode: 0755
-    when: ec2_install
-    become: true
-
   - name: Install docker through pip
     pip:
       name: docker

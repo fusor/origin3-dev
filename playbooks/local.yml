@@ -1,0 +1,6 @@
+- hosts: localhost
+  vars_files:
+  - config.yml
+  roles:
+  - openshift_setup
+  - ansible_service_broker_setup
