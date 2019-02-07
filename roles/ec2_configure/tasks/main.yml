@@ -1,0 +1,61 @@
+- block:
+  - name: Enable extras repo
+    shell: yum-config-manager --enable rhui-REGION-rhel-server-extras
+
+  - name: Enable EPEL
+    package:
+      name: "https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm"
+      state: present
+
+  - name: Create ASB repo for EL7 - This can go away after about 20190215. Package will be in EPEL
+    yum_repository:
+      name: "ansible-service-broker"
+      description: "Ansible Service Broker"
+      baseurl: "https://copr-be.cloud.fedoraproject.org/results/@ansible-service-broker/ansible-service-broker-latest/epel-7-$basearch/"
+      enabled: yes
+      gpgcheck: no
+
+  - name: Update system
+    yum:
+      name: '*'
+      state: latest
+
+  - name: Install docker
+    package:
+      name: docker
+      state: present
+
+  - name: Configure docker storage
+    copy:
+      content: |
+               STORAGE_DRIVER=""
+      dest: /etc/sysconfig/docker-storage-setup
+
+  - name: Created docker group
+    group:
+      name: docker
+      state: present
+
+  - name: Added ec2-user to group
+    user:
+      name: ec2-user
+      groups: docker
+
+  - name: Add insecure registry for openshift
+    replace:
+      path: /etc/sysconfig/docker
+      regexp: "OPTIONS='--selinux-enabled"
+      replace: "OPTIONS='--insecure-registry 172.30.0.0/16 --selinux-enabled"
+
+  - name: Start and enable docker
+    systemd:
+      name: docker
+      state: started
+      enabled: true
+  become: true
+
+- name: Reset ssh connection to allow user changes to take affect
+  meta: reset_connection
+
+- name: Update facts to pick up new interface
+  setup:

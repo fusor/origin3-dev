@@ -1,0 +1,13 @@
+openshift_setup_client_version: v3.11
+openshift_setup_interface: docker0
+
+ec2_install: true
+
+ec2_ami: ami-011b3ccf1bd6db744
+ec2_instance_type: m4.large
+ec2_key: libra
+ec2_region: us-east-1
+ec2_subnet_cidr: 10.0.1.0/24
+ec2_user: origin3-dev
+ec2_vpc_cidr: 10.0.0.0/16
+ec2_vpc_name: origin3-dev

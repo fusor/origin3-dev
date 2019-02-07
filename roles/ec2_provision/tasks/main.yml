@@ -1,0 +1,89 @@
+- name: Create VPC
+  ec2_vpc_net:
+    name: "{{ ec2_vpc_name }}"
+    cidr_block: "{{ ec2_vpc_cidr }}"
+    region: "{{ ec2_region }}"
+    tags:
+      creator: origin3-dev
+  register: ec2_vpc
+
+- name: Create VPC subnet
+  ec2_vpc_subnet:
+    state: present
+    vpc_id: "{{ ec2_vpc.vpc.id }}"
+    cidr: "{{ ec2_subnet_cidr }}"
+    region: "{{ ec2_region }}"
+    resource_tags:
+      creator: origin3-dev
+  register: ec2_subnet
+
+- name: Create VPC Internet Gateway
+  ec2_vpc_igw:
+    vpc_id: "{{ ec2_vpc.vpc.id }}"
+    region: "{{ ec2_region }}"
+    tags:
+      Name: origin3-dev
+  register: ec2_igw
+
+- name: Create VPC Routing Table
+  ec2_vpc_route_table:
+    vpc_id: "{{ ec2_vpc.vpc.id }}"
+    region: "{{ ec2_region }}"
+    tags:
+      Name: origin3-dev
+    subnets:
+    - "{{ ec2_subnet.subnet.id }}"
+    routes:
+    - dest: "0.0.0.0/0"
+      gateway_id: "{{ ec2_igw.gateway_id }}"
+
+- name: Create Security Group
+  ec2_group:
+    name: origin3-dev
+    description: origin3-dev
+    vpc_id: "{{ ec2_vpc.vpc.id }}"
+    region: "{{ ec2_region }}"
+    rules_egress:
+    - proto: "all"
+      from_port: "0"
+      to_port: "65535"
+      cidr_ip: "0.0.0.0/0"
+    rules:
+    - proto: "tcp"
+      from_port: "22"
+      to_port: "22"
+      cidr_ip: "0.0.0.0/0"
+
+- name: Create Instance
+  ec2:
+    key_name: "{{ ec2_key }}"
+    instance_type: "{{ ec2_instance_type }}"
+    group: origin3-dev
+    image: "{{ ec2_ami }}"
+    count: 1
+    region: "{{ ec2_region }}"
+    vpc_subnet_id: "{{ ec2_subnet.subnet.id }}"
+    assign_public_ip: yes
+    instance_tags:
+      creator: origin3-dev
+      user: "{{ ec2_user }}"
+      Name: "{{ ec2_user }}-origin3-dev"
+    wait: yes
+  register: ec2_instance
+
+- name: Add instance to Ansible inventory
+  add_host:
+    hostname: "{{ ec2_instance.instances[0].public_ip }}"
+    ansible_user: ec2-user
+    ansible_ssh_private_key_file: "~/.ssh/{{ ec2_key }}.pem"
+
+- name: Wait for SSH to be available on instance
+  wait_for:
+    host: "{{ ec2_instance.instances[0].public_ip }}"
+    port: 22
+    search_regex: OpenSSH
+    delay: 10
+    timeout: 300
+
+- name: Add SSH key to known hosts
+  shell: "ssh-keyscan {{ ec2_instance.instances[0].public_ip }} >> ~/.ssh/known_hosts"
