@@ -86,14 +86,3 @@
 
   - name: Switch project to {{ asb_project }}
     shell: "{{ openshift_setup_client_oc_cmd }} project {{ asb_project }}"
-
-  - name: Set proxied broker vars
-    set_fact:
-      proxied_broker_project: "{{ asb_project }}"
-      proxied_broker_container: asb
-    when: ec2_use_proxy and ec2_install
-
-  - name: Configure ASB with egress proxy
-    include_role:
-      name: broker_proxy_setup
-    when: ec2_use_proxy and ec2_install
