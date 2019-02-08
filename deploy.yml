@@ -2,8 +2,8 @@
   vars_files:
   - config.yml
 
-- import_playbook: playbooks/local.yml
+- import_playbook: ansible/local.yml
   when: not(ec2_install)
 
-- import_playbook: playbooks/ec2.yml
+- import_playbook: ansible/ec2.yml
   when: ec2_install
