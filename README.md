@@ -9,6 +9,7 @@ This repo provides some ansible to bring up an Origin cluster of the specified v
     * AWS_ACCESS_KEY_ID
     * AWS_SECRET_ACCESS_KEY
   * For EC2 you'll also want to make sure your public key exists at `~/.ssh/${ec2_key}.pem`
+  * Modifying `ec2_user` isn't necessary, but in a multi-user environment it will prefix instances with your name to make your personal resources easier to differentiate
   * Run `ansible-playbook deploy.yml`
 
 ## Known issues
