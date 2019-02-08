@@ -49,6 +49,46 @@
     - openshift_setup_client_ext=="tar.gz"
     - not(openshift_setup_use_local_oc_client)
 
+  - name: Get localhost facts
+    setup:
+    when: ec2_install
+    delegate_to: localhost
+
+  - name: Get client binary for Mac on localhost
+    unarchive:
+      remote_src: true
+      src: "{{ openshift_setup_client_release_url }}"
+      dest: "{{ openshift_setup_client_tools_dir }}"
+      mode: 0755
+      exclude:
+      - README.md
+      - LICENSE
+    when:
+    - openshift_setup_client_ext=="zip"
+    - not(openshift_setup_use_local_oc_client)
+    - ec2_install
+    delegate_to: localhost
+
+  - name: Get client binary for Linux on localhost
+    unarchive:
+      remote_src: true
+      src: "{{ openshift_setup_client_release_url }}"
+      dest: "{{ openshift_setup_client_tools_dir }}"
+      mode: 0755
+      extra_opts:
+      - "--strip-components=1"
+      - "--add-file"
+      - "{{ openshift_setup_client_release }}/oc"
+    when:
+    - openshift_setup_client_ext=="tar.gz"
+    - not(openshift_setup_use_local_oc_client)
+    - ec2_install
+    delegate_to: localhost
+
+  - name: Restore ec2 host facts
+    setup:
+    when: ec2_install
+
   - name: Install docker through pip
     pip:
       name: docker
@@ -182,3 +222,4 @@
 
   - name: Login as {{ openshift_setup_user }}
     shell: "{{ openshift_setup_client_oc_cmd }} login -u {{ openshift_setup_user }} -p {{ openshift_setup_user_password }} --insecure-skip-tls-verify=true"
+    notify: cluster-info
