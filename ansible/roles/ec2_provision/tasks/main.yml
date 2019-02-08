@@ -1,3 +1,25 @@
+- name: Install boto3 through pip
+  pip:
+    name: boto3
+  become: 'true'
+  when: ansible_os_family != "RedHat"
+
+- set_fact:
+    python_boto3: python2-boto3
+
+- set_fact:
+    python_boto3: python3-boto3
+  when:
+  - ansible_distribution == 'Fedora'
+  - ansible_distribution_major_version >= "29"
+
+- name: Install boto3 through yum/dnf
+  package:
+    name: "{{ python_boto3 }}"
+    state: installed
+  become: 'true'
+  when: ansible_os_family == "RedHat"
+
 - name: Create VPC
   ec2_vpc_net:
     name: "{{ ec2_vpc_name }}"
