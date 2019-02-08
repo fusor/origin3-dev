@@ -59,3 +59,7 @@
 
 - name: Update facts to pick up new interface
   setup:
+
+- name: Update openshift defaults
+  set_fact:
+    openshift_setup_ip: "{{ inventory_hostname }}"
