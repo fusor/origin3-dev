@@ -52,6 +52,7 @@
       name: docker
       state: started
       enabled: true
+    notify: ssh-info
   become: true
 
 - name: Reset ssh connection to allow user changes to take affect
