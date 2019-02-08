@@ -44,7 +44,7 @@
       extra_opts:
       - "--strip-components=1"
       - "--add-file"
-      - "{{ openshift_setup_client_release }}/oc" 
+      - "{{ openshift_setup_client_release }}/oc"
     when:
     - openshift_setup_client_ext=="tar.gz"
     - not(openshift_setup_use_local_oc_client)
@@ -89,25 +89,29 @@
     setup:
     when: ec2_install
 
-  - name: Install docker through pip
+  - name: Install requirements through pip
     pip:
-      name: docker
+      name:
+      - docker
+      - passlib
       version: 2.3.0
     become: 'true'
     when: ansible_os_family != "RedHat"
 
   - set_fact:
-      python_docker: python2-docker
+      python: python2
 
   - set_fact:
-      python_docker: python3-docker
-    when: 
+      python: python3
+    when:
     - ansible_distribution == 'Fedora'
     - ansible_distribution_major_version == "29"
 
-  - name: Install docker through yum/dnf
+  - name: Install requirements through yum/dnf
     package:
-      name: "{{ python_docker }}"
+      name:
+      - "{{ python }}-docker"
+      - "{{ python }}-passlib"
       state: installed
     become: 'true'
     when: ansible_os_family == "RedHat"
@@ -210,6 +214,103 @@
   - name: Run oc cluster up to start the cluster
     shell: "{{ openshift_setup_client_oc_cmd }} cluster down && {{ oc_cluster_up_cmd }}"
     register: oc_cluster_up
+
+  - name: Shut down cluster to modify auth
+    shell: "{{ openshift_setup_client_oc_cmd }} cluster down"
+
+  - set_fact:
+      master_config_dir: /var/lib/origin/openshift.local.config/master
+    when: ("v3.7" in openshift_setup_image_tag) or
+          ("v3.9" in openshift_setup_image_tag)
+
+  - set_fact:
+      master_config_dir: /tmp/openshift.local.clusterup/kube-apiserver
+    when: ("v3.10" in openshift_setup_image_tag) or
+          ("v3.11" in openshift_setup_image_tag)
+
+  - name: Slurp json
+    slurp:
+      src: "{{ master_config_dir }}/master-config.yaml"
+    register: master_config
+    when: ("v3.10" in openshift_setup_image_tag)
+
+  - name: Write yaml
+    copy:
+      content: "{{ master_config.content | b64decode | from_json | to_nice_yaml(indent=2) }}"
+      dest: "{{ master_config_dir }}/master-config.yaml"
+    when: ("v3.10" in openshift_setup_image_tag)
+
+  - name: Rename identity provider
+    replace:
+      path: "{{ master_config_dir }}/master-config.yaml"
+      regexp: anypassword
+      replace: custom_http
+    become: true
+
+  - name: Replace identity provider type
+    replace:
+      path: "{{ master_config_dir }}/master-config.yaml"
+      regexp: AllowAllPasswordIdentityProvider
+      replace: HTPasswdPasswordIdentityProvider
+    become: true
+
+  - set_fact:
+      htpasswd_dir: "{{ master_config_dir }}"
+    when: ("v3.7" in openshift_setup_image_tag) or
+          ("v3.9" in openshift_setup_image_tag)
+
+  - set_fact:
+      htpasswd_dir: /etc/origin/master
+    when: ("v3.10" in openshift_setup_image_tag) or
+          ("v3.11" in openshift_setup_image_tag)
+
+  - name: Add httpd file path to identity provider
+    lineinfile:
+      path: "{{ master_config_dir }}/master-config.yaml"
+      insertafter: "kind: HTPasswdPasswordIdentityProvider"
+      regexp: "file: {{ htpasswd_dir }}/htpasswd"
+      line: "      file: {{ htpasswd_dir }}/htpasswd"
+    become: true
+
+  - name: Remove mapping method from identity provider
+    lineinfile:
+      path: "{{ master_config_dir }}/master-config.yaml"
+      regexp: "mappingMethod: claim"
+      state: absent
+    become: true
+
+  - name: create htpasswd file
+    htpasswd:
+      path: "{{ master_config_dir }}/htpasswd"
+      name: "{{ openshift_setup_user }}"
+      password: "{{ openshift_setup_user_password }}"
+    become: true
+
+  - name: Set command line to bring up the cluster with the existing config
+    set_fact:
+      existing_config_cmdline: >-
+        {{ openshift_setup_client_oc_cmd }} cluster up
+        --routing-suffix={{ openshift_setup_routing_suffix }}
+        --public-hostname={{ openshift_setup_hostname }}
+        --host-pv-dir={{ openshift_setup_vol_mnt_point }}
+        --image={{ openshift_setup_origin_image_name }}
+        --version={{ openshift_setup_image_tag }}
+        --service-catalog=true
+        --use-existing-config
+    when: ("v3.7" in openshift_setup_image_tag) or
+          ("v3.9" in openshift_setup_image_tag)
+
+  - set_fact:
+      existing_config_cmdline: >-
+        {{ openshift_setup_client_oc_cmd }} cluster up
+        --routing-suffix={{ openshift_setup_routing_suffix }}
+        --public-hostname={{ openshift_setup_hostname }}
+        --base-dir={{ openshift_setup_base_dir }}
+    when: ("v3.10" in openshift_setup_image_tag) or
+          ("v3.11" in openshift_setup_image_tag)
+
+  - name: Bring cluster back up
+    shell: "{{ existing_config_cmdline }}"
 
   - name: Login as system:admin
     shell: "{{ openshift_setup_client_oc_cmd }} login -u system:admin"

@@ -1,5 +1,7 @@
 openshift_setup_client_version: v3.11
 openshift_setup_interface: docker0
+openshift_setup_user: admin
+openshift_setup_user_password: admin
 
 ec2_install: true
 
