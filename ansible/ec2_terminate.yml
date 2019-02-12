@@ -2,9 +2,14 @@
   vars_files:
   - config.yml
   tasks:
+  - name: Get AWS account information
+    aws_caller_facts:
+    register: caller_facts
+
   - ec2_instance_facts:
       filters:
         "tag:Name": "{{ ansible_user }}-origin3-dev"
+        "tag:creator_arn": "{{ caller_facts.arn }}"
       region: "{{ ec2_region }}"
     register: ec2_metadata
 

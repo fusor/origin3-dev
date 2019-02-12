@@ -92,6 +92,10 @@
       to_port: "8443"
       cidr_ip: "0.0.0.0/0"
 
+- name: Get AWS account information
+  aws_caller_facts:
+  register: caller_facts
+
 - name: Create Instance
   ec2:
     key_name: "{{ ec2_key }}"
@@ -104,6 +108,7 @@
     assign_public_ip: yes
     instance_tags:
       creator: origin3-dev
+      creator_arn: "{{ caller_facts.arn }}"
       user: "{{ ec2_user }}"
       Name: "{{ ec2_user }}-origin3-dev"
     wait: yes
