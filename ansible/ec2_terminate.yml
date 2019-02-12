@@ -1,0 +1,28 @@
+- hosts: localhost
+  vars_files:
+  - config.yml
+  tasks:
+  - ec2_instance_facts:
+      filters:
+        "tag:Name": "{{ ansible_user }}-origin3-dev"
+      region: "{{ ec2_region }}"
+    register: ec2_metadata
+
+  - set_fact:
+      instances: "{{ ec2_metadata.instances | map(attribute='instance_id') | list }}"
+
+  - debug:
+      msg:
+      - "These instances will be terminated if you proceed:"
+      - "{{ instances }}"
+
+  - pause:
+      prompt: "Do you want to terminate the instances listed above? (yes/no)"
+    register: proceed
+
+  - local_action:
+      module: ec2
+      instance_ids: "{{ instances }}"
+      state: absent
+      region: "{{ ec2_region }}"
+    when: proceed.user_input == "yes"
