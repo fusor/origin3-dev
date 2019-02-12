@@ -16,6 +16,13 @@ This repo provides some ansible to bring up an Origin cluster of the specified v
   * For EC2 you'll also want to make sure your public key exists at `~/.ssh/${ec2_key}.pem`
   * Run `ansible-playbook deploy.yml`
 
+# Instance cleanup
+  * `ansible-playbook terminate.yml` will prompt you with a list of instances it will terminate.
+    * Responding `yes` will proceed with terminating instances.
+    * `no` (or pretty much anything else) should skip termination.
+    * It's probably a good idea to verify the instances are yours.
+    * Since network resources (VPC, IGW, Security Group, etc.) are shared they are not cleaned up
+
 ## Known issues
   * Prior to v3.11 nothing is likely to work on Fedora 29+ without a workaround to set the docker cgroup driver to cgroupfs.
     * This is done by overriding/editing the docker service file and restarting docker

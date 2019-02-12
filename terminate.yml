@@ -1,0 +1,5 @@
+- hosts: localhost
+  vars_files:
+  - config.yml
+
+- import_playbook: ansible/ec2_terminate.yml
