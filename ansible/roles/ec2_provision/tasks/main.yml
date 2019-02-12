@@ -1,21 +1,25 @@
-- name: Install boto3 through pip
+- name: Install boto and boto3 through pip
   pip:
-    name: boto3
+    name:
+    - boto
+    - boto3
   become: 'true'
   when: ansible_os_family != "RedHat"
 
 - set_fact:
-    python_boto3: python2-boto3
+    python: python2
 
 - set_fact:
-    python_boto3: python3-boto3
+    python: python3
   when:
   - ansible_distribution == 'Fedora'
-  - ansible_distribution_major_version >= "29"
+  - (ansible_distribution_major_version|int) >= 29
 
-- name: Install boto3 through yum/dnf
+- name: Install boto and boto3 through yum/dnf
   package:
-    name: "{{ python_boto3 }}"
+    name:
+    - "{{ python }}-boto"
+    - "{{ python }}-boto3"
     state: installed
   become: 'true'
   when: ansible_os_family == "RedHat"
