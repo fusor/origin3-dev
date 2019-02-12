@@ -197,7 +197,6 @@
         --base-dir={{ openshift_setup_base_dir }}
         --tag={{ openshift_setup_image_tag }}
         --image={{ openshift_setup_origin_image_name }}-\${component}:\${version}
-        --enable=service-catalog,router,registry,web-console,persistent-volumes,sample-templates,rhel-imagestreams,automation-service-broker,template-service-broker
     when: ("v3.10" in openshift_setup_image_tag) or
           ("v3.11" in openshift_setup_image_tag)
 
@@ -218,13 +217,24 @@
   - name: Shut down cluster to modify auth
     shell: "{{ openshift_setup_client_oc_cmd }} cluster down"
 
+  - name: Restart docker. Origin issue 16160 makes the next cluster up fail often.
+    systemd:
+      name: docker
+      state: restarted
+      enabled: true
+    notify: ssh-info
+    become: true
+    when: (ansible_os_family == "RedHat") or
+          (ansible_distribution == "Ubuntu") or
+          (ansible_distribution == "Archlinux")
+
   - set_fact:
       master_config_dir: /var/lib/origin/openshift.local.config/master
     when: ("v3.7" in openshift_setup_image_tag) or
           ("v3.9" in openshift_setup_image_tag)
 
   - set_fact:
-      master_config_dir: /tmp/openshift.local.clusterup/kube-apiserver
+      master_config_dir: "{{ openshift_setup_base_dir }}/kube-apiserver"
     when: ("v3.10" in openshift_setup_image_tag) or
           ("v3.11" in openshift_setup_image_tag)
 
@@ -311,6 +321,21 @@
 
   - name: Bring cluster back up
     shell: "{{ existing_config_cmdline }}"
+
+  - name: Add features to 3.10 and 3.11
+    shell: "{{ openshift_setup_client_oc_cmd }} cluster add --base-dir={{ openshift_setup_base_dir }} {{ item }}"
+    with_items:
+    - service-catalog
+    - router
+    - registry
+    - web-console
+    - persistent-volumes
+    - sample-templates
+    - rhel-imagestreams
+    - automation-service-broker
+    - template-service-broker
+    when: ("v3.10" in openshift_setup_image_tag) or
+          ("v3.11" in openshift_setup_image_tag)
 
   - name: Login as system:admin
     shell: "{{ openshift_setup_client_oc_cmd }} login -u system:admin"
