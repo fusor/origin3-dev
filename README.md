@@ -2,6 +2,11 @@
 ## Overview
 This repo provides some ansible to bring up an Origin cluster of the specified version from 3.7 to 3.11. This playbook will set up an Openshift cluster with additional features enabled, such as [Ansible Service Broker](https://github.com/openshift/ansible-service-broker)
 
+## Requirements
+  * A recent version of ansible.
+    * Ansible 2.7.5+ is known to work
+    * Ansible 2.4.0 is known not to work, at least on OS X
+
 ## Use
   * copy `config.yml.example` to `config.yml` and edit desired options
   * Set `ec2_install: true` in config.yml to install on ec2 or `ec2_install: false` to install locally

@@ -105,7 +105,7 @@
       python: python3
     when:
     - ansible_distribution == 'Fedora'
-    - ansible_distribution_major_version == "29"
+    - (ansible_distribution_major_version|int) >= 29
 
   - name: Install requirements through yum/dnf
     package:
@@ -216,6 +216,10 @@
 
   - name: Shut down cluster to modify auth
     shell: "{{ openshift_setup_client_oc_cmd }} cluster down"
+
+  - name: clean up mounts. Origin issue 16160 makes the next cluster up fail often. 
+    shell: for i in $(mount | grep openshift | awk '{ print $3}'); do umount "$i"; done
+    become: true
 
   - name: Restart docker. Origin issue 16160 makes the next cluster up fail often.
     systemd:
