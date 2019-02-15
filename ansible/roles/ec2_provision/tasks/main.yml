@@ -7,7 +7,7 @@
   when: ansible_os_family != "RedHat"
 
 - set_fact:
-    python: python2
+    python: python
 
 - set_fact:
     python: python3
@@ -15,10 +15,23 @@
   - ansible_distribution == 'Fedora'
   - (ansible_distribution_major_version|int) >= 29
 
+- name: Create ASB repo for EL7 for python2-docker
+  yum_repository:
+    name: "ansible-service-broker"
+    description: "Ansible Service Broker"
+    baseurl: "https://copr-be.cloud.fedoraproject.org/results/@ansible-service-broker/ansible-service-broker-latest/epel-7-$basearch/"
+    enabled: yes
+    gpgcheck: no
+  become: true
+  when:
+  - ansible_os_family == "RedHat"
+  - python == "python"
+
 - name: Install boto and boto3 through yum/dnf
   package:
     name:
     - "{{ python }}-boto"
+    - "{{ python }}-botocore"
     - "{{ python }}-boto3"
     state: installed
   become: 'true'
