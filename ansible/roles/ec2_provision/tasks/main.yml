@@ -33,7 +33,7 @@
     - "{{ python }}-boto"
     - "{{ python }}-botocore"
     - "{{ python }}-boto3"
-    state: installed
+    state: latest
   become: 'true'
   when: ansible_os_family == "RedHat"
 
