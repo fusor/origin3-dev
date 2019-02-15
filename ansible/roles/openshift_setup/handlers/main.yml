@@ -2,5 +2,5 @@
   debug:
     msg:
     - "Your cluster console is available at https://{{ openshift_setup_hostname }}:8443/console"
-    - "Your can also login via CLI with:"
-    -  "oc login -u {{ openshift_setup_user }} -p {{ openshift_setup_user_password }} https://{{ openshift_setup_hostname }}:8443 --insecure-skip-tls-verify=true"
+    - "You can also login via CLI with"
+    - "oc login -u {{ openshift_setup_user }} -p {{ openshift_setup_user_password }} https://{{ openshift_setup_hostname }}:8443 --insecure-skip-tls-verify=true"
