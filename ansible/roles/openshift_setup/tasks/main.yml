@@ -54,6 +54,13 @@
     when: ec2_install
     delegate_to: localhost
 
+  - file:
+      path: "{{ openshift_setup_client_tools_dir }}"
+      state: directory
+      mode: 0755
+    when: ec2_install
+    delegate_to: localhost
+
   - name: Get client binary for Mac on localhost
     unarchive:
       remote_src: true
