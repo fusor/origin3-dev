@@ -107,6 +107,18 @@
     - ansible_distribution == 'Fedora'
     - (ansible_distribution_major_version|int) >= 29
 
+  - name: Create ASB repo for EL7 for python2-docker
+    yum_repository:
+      name: "ansible-service-broker"
+      description: "Ansible Service Broker"
+      baseurl: "https://copr-be.cloud.fedoraproject.org/results/@ansible-service-broker/ansible-service-broker-latest/epel-7-$basearch/"
+      enabled: yes
+      gpgcheck: no
+    become: true
+    when:
+    - ansible_os_family == "RedHat"
+    - python == "python2"
+
   - name: Install requirements through yum/dnf
     package:
       name:
@@ -226,7 +238,6 @@
       name: docker
       state: restarted
       enabled: true
-    notify: ssh-info
     become: true
     when: (ansible_os_family == "RedHat") or
           (ansible_distribution == "Ubuntu") or

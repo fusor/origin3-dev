@@ -1,5 +1,5 @@
 - name: ssh-info
   debug:
     msg:
-    - "To ssh into your EC2 VM:"
+    - "To ssh into your EC2 VM"
     -  "ssh -i ~/.ssh/{{ ec2_key }}.pem {{ ansible_user }}@{{ inventory_hostname }}"
