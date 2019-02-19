@@ -125,12 +125,15 @@
     when:
     - ansible_os_family == "RedHat"
     - python == "python2"
+    - not(ansible_distribution == 'Fedora')
 
   - name: Install requirements through yum/dnf
     package:
       name:
       - "{{ python }}-docker"
       - "{{ python }}-passlib"
+      - tar
+      - unzip
       state: installed
     become: 'true'
     when: ansible_os_family == "RedHat"
