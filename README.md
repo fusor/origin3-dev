@@ -13,7 +13,7 @@ This repo provides some ansible to bring up an Origin cluster of the specified v
   * For EC2 you will want to set the following environment variables for authentication:
     * AWS_ACCESS_KEY_ID
     * AWS_SECRET_ACCESS_KEY
-  * For EC2 you'll also want to make sure your public key exists at `~/.ssh/${ec2_key}.pem`
+  * For EC2 ensure your private key exists at the location referenced by ec2_private_key_file in config.yml
   * Run `ansible-playbook deploy.yml`
 
 ## Instance cleanup
