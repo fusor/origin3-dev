@@ -6,10 +6,12 @@
   become: 'true'
   when: ansible_os_family != "RedHat"
 
-- set_fact:
+- name: Set default python version
+  set_fact:
     python: python
 
-- set_fact:
+- name: Update python version for distro releases defaulting to python3
+  set_fact:
     python: python3
   when:
   - ansible_distribution == 'Fedora'
@@ -109,6 +111,27 @@
 - name: Get AWS account information
   aws_caller_facts:
   register: caller_facts
+
+- name: Get Red Hat AMI List
+  ec2_ami_facts:
+    owners: 309956199498
+    region: "{{ ec2_region }}"
+  register: ami_list
+  when: not(ec2_ami is defined)
+
+- name: Set AMI Prefix
+  set_fact:
+    ec2_ami_prefix: RHEL-{{ ec2_rhel_version }}_HVM_GA
+  when: not(ec2_ami is defined)
+
+- name: Get suggested AMI ID
+  set_fact:
+    ec2_ami: "{{ item.image_id }}"
+  when:
+  - ec2_ami_prefix in item.image_location
+  - item.architecture == "x86_64"
+  - not(ec2_ami is defined)
+  with_items: "{{ ami_list.images }}"
 
 - name: Create Instance
   ec2:
