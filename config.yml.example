@@ -5,7 +5,6 @@ openshift_setup_user_password: admin
 
 ec2_install: true
 
-ec2_ami: ami-011b3ccf1bd6db744
 ec2_instance_type: m4.large
 ec2_key: libra
 ec2_private_key_file: ~/.ssh/libra.pem
