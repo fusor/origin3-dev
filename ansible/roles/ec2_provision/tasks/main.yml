@@ -15,7 +15,7 @@
   - ansible_distribution == 'Fedora'
   - (ansible_distribution_major_version|int) >= 29
 
-- name: Create ASB repo for EL7 for python2-docker
+- name: Add ASB repo for updated EL7 docker and botocore python packages
   yum_repository:
     name: "ansible-service-broker"
     description: "Ansible Service Broker"
