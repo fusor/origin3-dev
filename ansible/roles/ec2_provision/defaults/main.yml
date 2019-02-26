@@ -1,5 +1,6 @@
 ec2_key: libra
 ec2_private_key_file: ~/.ssh/{{ ec2_key }}.pem
+ec2_repo_create: true
 ec2_instance_type: m4.medium
 ec2_rhel_version: 7.6
 ec2_region: us-east-1
