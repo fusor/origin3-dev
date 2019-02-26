@@ -1,0 +1,15 @@
+- hosts: localhost
+  vars_files:
+  - config.yml
+  tasks:
+  - pause:
+      prompt: "Do you want to terminate local cluster? (yes/no)"
+    register: proceed
+
+  - name: Stop local cluster
+    shell: "oc cluster down"
+    when: proceed.user_input == "yes"
+
+  - name: Clean up cluster mounts
+    shell: for i in $(mount | grep openshift | awk '{ print $3}'); do umount "$i"; done && rm -rf /tmp/openshift.local.clusterup
+    when: proceed.user_input == "yes"
