@@ -12,9 +12,13 @@
       name: '*'
       state: latest
 
-  - name: Install docker
+  - name: Install docker and other useful packages
     package:
-      name: docker
+      name:
+      - docker
+      - git
+      - ansible
+      - python-openshift
       state: present
 
   - name: Configure docker storage
