@@ -24,10 +24,12 @@
   - pause:
       prompt: "Do you want to terminate the instances listed above? (yes/no)"
     register: proceed
+    when: not ec2_force_terminate_instances
 
   - local_action:
       module: ec2
       instance_ids: "{{ instances }}"
       state: absent
       region: "{{ ec2_region }}"
-    when: proceed.user_input == "yes"
+    when: (proceed.user_input is defined and proceed.user_input == "yes") or 
+          ec2_force_terminate_instances == "true"

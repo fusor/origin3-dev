@@ -4,6 +4,7 @@ openshift_setup_user: admin
 openshift_setup_user_password: admin
 
 ec2_install: true
+ec2_force_terminate_instances: false
 
 ec2_instance_type: m4.large
 ec2_key: libra
