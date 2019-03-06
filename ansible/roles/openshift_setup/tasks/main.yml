@@ -374,3 +374,8 @@
   - name: Login as {{ openshift_setup_user }}
     shell: "{{ openshift_setup_client_oc_cmd }} login -u {{ openshift_setup_user }} -p {{ openshift_setup_user_password }} --insecure-skip-tls-verify=true"
     notify: cluster-info
+
+  - name: Auto login remotely as {{ openshift_setup_user }}
+    shell: "oc login -u {{ openshift_setup_user }} -p {{ openshift_setup_user_password }} https://{{ openshift_setup_hostname }}:8443 --insecure-skip-tls-verify=true"
+    when: openshift_setup_remote_auto_login
+    delegate_to: localhost

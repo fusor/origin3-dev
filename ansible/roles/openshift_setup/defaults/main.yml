@@ -60,3 +60,4 @@ openshift_setup_use_local_oc_client: false
 openshift_setup_vol_mnt_point: "{{ openshift_setup_base_dir }}/openshift.local.pv"
 openshift_setup_user: admin
 openshift_setup_user_password: admin
+openshift_setup_remote_auto_login: false
