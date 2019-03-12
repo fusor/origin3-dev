@@ -24,6 +24,7 @@ openshift_setup_clients:
   v3.11:
     url: https://github.com/openshift/origin/releases/download/v3.11.0
     release_ver: openshift-origin-client-tools-v3.11.0-0cbc58b
+openshift_setup_cluster_retries: 0
 openshift_setup_docker_images:
   group1:
   - { img: "{{ openshift_setup_broker_image_name }}", tag: "{{ openshift_setup_image_tag }}" }

@@ -233,8 +233,11 @@
       msg: "Looking at oc cluster up command:  '{{ oc_cluster_up_cmd }}'"
 
   - name: Run oc cluster up to start the cluster
-    shell: "{{ openshift_setup_client_oc_cmd }} cluster down && {{ oc_cluster_up_cmd }}"
+    shell: "{{ openshift_setup_client_oc_cmd }} cluster down && sleep 5 && {{ oc_cluster_up_cmd }}"
     register: oc_cluster_up
+    retries: "{{ openshift_setup_cluster_retries }}"
+    delay: 15
+    until: oc_cluster_up.rc == 0
 
   - name: Shut down cluster to modify auth
     shell: "{{ openshift_setup_client_oc_cmd }} cluster down"
@@ -345,7 +348,10 @@
           ("v3.11" in openshift_setup_image_tag)
 
   - name: Bring cluster back up
-    shell: "{{ existing_config_cmdline }}"
+    shell: "{{ openshift_setup_client_oc_cmd }} cluster down && sleep 5 && {{ existing_config_cmdline }}"
+    retries: "{{ openshift_setup_cluster_retries }}"
+    delay: 15
+    until: oc_cluster_up.rc == 0
 
   - name: Add features to 3.10 and 3.11
     shell: "{{ openshift_setup_client_oc_cmd }} cluster add --base-dir={{ openshift_setup_base_dir }} {{ item }}"
