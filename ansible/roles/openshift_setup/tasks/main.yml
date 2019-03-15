@@ -242,7 +242,7 @@
   - name: Shut down cluster to modify auth
     shell: "{{ openshift_setup_client_oc_cmd }} cluster down"
 
-  - name: clean up mounts. Origin issue 16160 makes the next cluster up fail often. 
+  - name: clean up mounts. Origin issue 16160 makes the next cluster up fail often.
     shell: for i in $(mount | grep openshift | awk '{ print $3}'); do umount "$i"; done
     become: true
 
@@ -323,6 +323,14 @@
       name: "{{ openshift_setup_user }}"
       password: "{{ openshift_setup_user_password }}"
     become: true
+
+  - name: "Add additional corsAllowedOrigins"
+    yedit:
+      src: "{{ master_config_dir }}/master-config.yaml"
+      key: corsAllowedOrigins
+      append: true
+      value: "{{ item }}"
+    with_items: "{{ additional_cors_allowed_origins }}"
 
   - name: Set command line to bring up the cluster with the existing config
     set_fact:

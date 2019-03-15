@@ -62,3 +62,7 @@ openshift_setup_vol_mnt_point: "{{ openshift_setup_base_dir }}/openshift.local.p
 openshift_setup_user: admin
 openshift_setup_user_password: admin
 openshift_setup_remote_auto_login: false
+
+# Will append additional corsAllowedOrigins entries to the master-config.yaml file
+# to support cross origin request from external UIs
+additional_cors_allowed_origins: []
