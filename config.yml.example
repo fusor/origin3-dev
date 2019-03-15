@@ -13,3 +13,10 @@ ec2_region: us-east-1
 ec2_subnet_cidr: 10.0.1.0/24
 ec2_vpc_cidr: 10.0.0.0/16
 ec2_vpc_name: origin3-dev
+
+# additional_cors_allowed_origins - appends to the default
+# corsAllowedOrigins master-config setting, whitelisting requests from
+# alternative domains
+# Ex:
+#additional_cors_allowed_origins:
+#  - //*.mg.dog8code.com
