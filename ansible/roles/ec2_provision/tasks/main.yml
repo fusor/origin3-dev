@@ -152,6 +152,9 @@
       user: "{{ ec2_user }}"
       Name: "{{ ec2_user }}-origin3-dev"
     wait: yes
+    volumes:
+    - device_name: /dev/sda1
+      volume_size: "{{ ec2_instance_disk_size|int }}"
   register: ec2_instance
 
 - name: Add instance to Ansible inventory
