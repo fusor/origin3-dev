@@ -49,6 +49,18 @@
       state: started
       enabled: true
     notify: ssh-info
+
+  - name: Copy a "sudoers" file on the remote machine for editing
+    copy:
+      src: /usr/lib/tmpfiles.d/tmp.conf
+      dest: /etc/tmpfiles.d/tmp.conf
+      remote_src: yes
+
+  - name: Exclude our openshift mount from tmpreaper/tmpwatch
+    lineinfile:
+      path: /etc/tmpfiles.d/tmp.conf
+      insertafter: '^X.*$'
+      line: 'x /tmp/openshift.local.clusterup'
   become: true
 
 - name: Reset ssh connection to allow user changes to take affect
