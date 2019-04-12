@@ -134,6 +134,7 @@
       - "{{ python }}-passlib"
       - tar
       - unzip
+      - nfs-utils
       state: installed
     become: 'true'
     when: ansible_os_family == "RedHat"
