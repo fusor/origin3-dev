@@ -168,8 +168,11 @@
     host: "{{ ec2_instance.instances[0].public_ip }}"
     port: 22
     search_regex: OpenSSH
-    delay: 10
+    delay: 20
     timeout: 300
+  register: result
+  until: result|succeeded
+  retries: 5
 
 - name: Ensure SSH homedir is present
   file:
