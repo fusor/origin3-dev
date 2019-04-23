@@ -50,7 +50,7 @@
       enabled: true
     notify: ssh-info
 
-  - name: Copy a "sudoers" file on the remote machine for editing
+  - name: Copy tmpfiles.d file for modification 
     copy:
       src: /usr/lib/tmpfiles.d/tmp.conf
       dest: /etc/tmpfiles.d/tmp.conf
