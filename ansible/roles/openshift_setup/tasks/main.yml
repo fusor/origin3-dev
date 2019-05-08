@@ -54,6 +54,20 @@
     when: ec2_install
     delegate_to: localhost
 
+  - set_fact:
+      openshift_setup_build_type: "mac"
+      openshift_setup_client_ext: "zip"
+    when:
+    - ansible_os_family == "Darwin"
+    - ec2_install
+
+  - set_fact:
+      openshift_setup_build_type: "linux-64bit"
+      openshift_setup_client_ext: "tar.gz"
+    when:
+    - (ansible_os_family == "RedHat") or (ansible_distribution == "Ubuntu") or (ansible_distribution == "Archlinux")
+    - ec2_install
+
   - file:
       path: "{{ openshift_setup_client_tools_dir }}"
       state: directory
