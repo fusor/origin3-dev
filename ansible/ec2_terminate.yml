@@ -10,7 +10,6 @@
       filters:
         "tag:Name": "{{ ansible_user }}-origin3-dev"
         "tag:creator_arn": "{{ caller_facts.arn }}"
-      region: "{{ ec2_region }}"
     register: ec2_metadata
 
   - set_fact:
@@ -30,6 +29,5 @@
       module: ec2
       instance_ids: "{{ instances }}"
       state: absent
-      region: "{{ ec2_region }}"
     when: (proceed.user_input is defined and proceed.user_input == "yes") or 
           ec2_force_terminate_instances == "true"

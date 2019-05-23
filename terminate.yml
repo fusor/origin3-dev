@@ -3,7 +3,7 @@
   - config.yml
 
 - import_playbook: ansible/local_terminate.yml
-  when: not(ec2_install)
+  when: not(ec2_install)|bool
 
 - import_playbook: ansible/ec2_terminate.yml
-  when: ec2_install
+  when: ec2_install|bool

@@ -29,7 +29,7 @@
   - ansible_os_family == "RedHat"
   - python == "python"
   - not(ansible_distribution == 'Fedora')
-  - ec2_repo_create
+  - ec2_repo_create|bool
 
 - name: Install boto and boto3 through yum/dnf
   package:
@@ -41,13 +41,12 @@
   become: 'true'
   when:
   - ansible_os_family == "RedHat"
-  - ec2_repo_create
+  - ec2_repo_create|bool
 
 - name: Create VPC
   ec2_vpc_net:
     name: "{{ ec2_vpc_name }}"
     cidr_block: "{{ ec2_vpc_cidr }}"
-    region: "{{ ec2_region }}"
     tags:
       creator: origin3-dev
   register: ec2_vpc
@@ -57,7 +56,6 @@
     state: present
     vpc_id: "{{ ec2_vpc.vpc.id }}"
     cidr: "{{ ec2_subnet_cidr }}"
-    region: "{{ ec2_region }}"
     resource_tags:
       creator: origin3-dev
   register: ec2_subnet
@@ -65,7 +63,6 @@
 - name: Create VPC Internet Gateway
   ec2_vpc_igw:
     vpc_id: "{{ ec2_vpc.vpc.id }}"
-    region: "{{ ec2_region }}"
     tags:
       Name: origin3-dev
   register: ec2_igw
@@ -73,7 +70,6 @@
 - name: Create VPC Routing Table
   ec2_vpc_route_table:
     vpc_id: "{{ ec2_vpc.vpc.id }}"
-    region: "{{ ec2_region }}"
     tags:
       Name: origin3-dev
     subnets:
@@ -87,7 +83,6 @@
     name: origin3-dev
     description: origin3-dev
     vpc_id: "{{ ec2_vpc.vpc.id }}"
-    region: "{{ ec2_region }}"
     rules_egress:
     - proto: "all"
       from_port: "0"
@@ -118,7 +113,6 @@
 - name: Get Red Hat AMI List
   ec2_ami_facts:
     owners: 309956199498
-    region: "{{ ec2_region }}"
   register: ami_list
   when: not(ec2_ami is defined)
 
@@ -143,7 +137,6 @@
     group: origin3-dev
     image: "{{ ec2_ami }}"
     count: 1
-    region: "{{ ec2_region }}"
     vpc_subnet_id: "{{ ec2_subnet.subnet.id }}"
     assign_public_ip: yes
     instance_tags:
@@ -171,7 +164,7 @@
     delay: 20
     timeout: 300
   register: result
-  until: result|succeeded
+  until: result is succeeded
   retries: 5
 
 - name: Ensure SSH homedir is present

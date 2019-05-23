@@ -51,7 +51,7 @@
 
   - name: Get localhost facts
     setup:
-    when: ec2_install
+    when: ec2_install|bool
     delegate_to: localhost
 
   - set_fact:
@@ -59,20 +59,20 @@
       openshift_setup_client_ext: "zip"
     when:
     - ansible_os_family == "Darwin"
-    - ec2_install
+    - ec2_install|bool
 
   - set_fact:
       openshift_setup_build_type: "linux-64bit"
       openshift_setup_client_ext: "tar.gz"
     when:
     - (ansible_os_family == "RedHat") or (ansible_distribution == "Ubuntu") or (ansible_distribution == "Archlinux")
-    - ec2_install
+    - ec2_install|bool
 
   - file:
       path: "{{ openshift_setup_client_tools_dir }}"
       state: directory
       mode: 0755
-    when: ec2_install
+    when: ec2_install|bool
     delegate_to: localhost
 
   - name: Get client binary for Mac on localhost
@@ -87,7 +87,7 @@
     when:
     - openshift_setup_client_ext=="zip"
     - not(openshift_setup_use_local_oc_client)
-    - ec2_install
+    - ec2_install|bool
     delegate_to: localhost
 
   - name: Get client binary for Linux on localhost
@@ -103,12 +103,12 @@
     when:
     - openshift_setup_client_ext=="tar.gz"
     - not(openshift_setup_use_local_oc_client)
-    - ec2_install
+    - ec2_install|bool
     delegate_to: localhost
 
   - name: Restore ec2 host facts
     setup:
-    when: ec2_install
+    when: ec2_install|bool
 
   - name: Install requirements through pip
     pip:
@@ -157,7 +157,8 @@
     docker_image:
       name: "{{ item.img }}"
       state: present
-      force: yes
+      force_source: yes
+      source: pull
       tag: "{{ item.tag }}"
     with_items:
       - "{{ openshift_setup_docker_images.group1 }}"
@@ -166,7 +167,8 @@
     docker_image:
       name: "{{ item.img }}"
       state: present
-      force: yes
+      force_source: yes
+      source: pull
       tag: "{{ item.tag }}"
     with_items:
       - "{{ openshift_setup_docker_images.group2 }}"
@@ -179,7 +181,8 @@
     docker_image:
       name: "{{ item.img }}"
       state: present
-      force: yes
+      force_source: yes
+      source: pull
       tag: "{{ item.tag }}"
     with_items:
       - "{{ openshift_setup_docker_images.group3 }}"
@@ -191,7 +194,8 @@
     docker_image:
       name: "{{ item.img }}"
       state: present
-      force: yes
+      force_source: yes
+      source: pull
       tag: "{{ item.tag }}"
     with_items:
       - "{{ openshift_setup_docker_images.group4 }}"
@@ -204,7 +208,8 @@
     docker_image:
       name: "{{ item.img }}"
       state: present
-      force: yes
+      force_source: yes
+      source: pull
       tag: "{{ item.tag }}"
     with_items:
       - "{{ openshift_setup_docker_images.group5 }}"
@@ -406,5 +411,5 @@
 
   - name: Auto login remotely as {{ openshift_setup_user }}
     shell: "oc login -u {{ openshift_setup_user }} -p {{ openshift_setup_user_password }} https://{{ openshift_setup_hostname }}:8443 --insecure-skip-tls-verify=true"
-    when: openshift_setup_remote_auto_login
+    when: openshift_setup_remote_auto_login|bool
     delegate_to: localhost
