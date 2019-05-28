@@ -10,9 +10,10 @@ This repo provides some ansible to bring up an Origin cluster of the specified v
 ## Use
   * copy `config.yml.example` to `config.yml` and edit desired options
   * Set `ec2_install: true` in config.yml to install on ec2 or `ec2_install: false` to install locally
-  * For EC2 you will want to set the following environment variables for authentication:
+  * For EC2 you will want to set the following environment variables for authentication and region:
     * AWS_ACCESS_KEY_ID
     * AWS_SECRET_ACCESS_KEY
+    * AWS_REGION
   * For EC2 ensure your private key exists at the location referenced by ec2_private_key_file in config.yml
   * Run `ansible-playbook deploy.yml`
 
