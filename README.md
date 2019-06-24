@@ -14,6 +14,12 @@ This repo provides some ansible to bring up an Origin cluster of the specified v
     * AWS_ACCESS_KEY_ID
     * AWS_SECRET_ACCESS_KEY
     * AWS_REGION
+  * For EC2, as an alternative to setting AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY in the shell environment, they can be put into `~/.aws/credentials` as follows (leaving AWS_REGION as an environment variable):
+    ```
+    [default]
+    aws_access_key_id=<AWS_ACCESS_KEY_ID>
+    aws_secret_access_key=<AWS_SECRET_ACCESS_KEY>
+    ```
   * For EC2 ensure your private key exists at the location referenced by ec2_private_key_file in config.yml
   * Run `ansible-playbook deploy.yml`
 
